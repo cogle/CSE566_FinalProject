@@ -58,10 +58,17 @@ void calcTemp(uchar4 * out, float * temp_data ,int max_width, int max_height, Pl
 	/*Initial check to ensure that the index is inbounds*/
 	if ((col >= max_width) || (row >= max_height)){ return; }
 	const int idx = getFlatIndex(col, row, max_width);
+	
+	//R
 	out[idx].x = 0;
-	out[idx].z = 0;
+	//G
 	out[idx].y = 0;
+	//B
+	out[idx].z = 0;
+	
+	//Alpha
 	out[idx].w = 0;
+
 }
 
 KernelInterface::KernelInterface(PlateInfo & p_i, float * temperature_array) : plate(p_i)

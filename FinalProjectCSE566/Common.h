@@ -51,6 +51,8 @@ struct PlateInfo
 	{
 		initPlateBoundariesGUI(plate_width, plate_height, max_width, max_height);
 		average_temp = (top_temp*plate_width + bot_temp*plate_width + left_temp*(plate_height - 2.0f) + right_temp*(plate_height - 2)) / (2.0f*plate_width + 2.0f*(plate_height - 2));
+		setMax(top_temp, left_temp, bot_temp, right_temp);
+		setMin(top_temp, left_temp, bot_temp, right_temp);
 	}
 	/*
 	PlateInfo(float t_t, float l_t, float b_t, float r_t) : top_temp(t_t), left_temp(l_t), bot_temp(b_t), right_temp(r_t)
@@ -111,6 +113,39 @@ struct PlateInfo
 		plate_bot_right_y = gui_array_center_y + diff_y;
 	}
 
+	void setMax(float top_temp, float left_temp, float bot_temp, float right_temp)
+	{
+		max_temp = top_temp;
+		if (left_temp > max_temp)
+		{
+			max_temp = left_temp;
+		}
+		if (bot_temp > max_temp)
+		{
+			max_temp = bot_temp;
+		}
+		if (right_temp > max_temp)
+		{
+			max_temp = right_temp;
+		}
+	}
+
+	void setMin(float top_temp, float left_temp, float bot_temp, float right_temp)
+	{
+		min_temp = top_temp;
+		if (left_temp > min_temp)
+		{
+			min_temp = left_temp;
+		}
+		if (bot_temp > min_temp)
+		{
+			min_temp = bot_temp;
+		}
+		if (right_temp > min_temp)
+		{
+			min_temp = right_temp;
+		}
+	}
 
 	int plate_top_left_x, plate_top_left_y;
 	int plate_top_right_x, plate_top_right_y;
@@ -119,6 +154,7 @@ struct PlateInfo
 	int plate_width, plate_height;
 	float top_temp, left_temp, bot_temp, right_temp, average_temp;
 
+	float max_temp, min_temp;
 };
 
 
