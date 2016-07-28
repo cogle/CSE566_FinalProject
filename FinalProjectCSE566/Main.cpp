@@ -50,12 +50,11 @@ int main(int argc, char** argv)
 		Exists globally but must use cudaMemcpy to view it on the machine.
 		Call is async, since the average, is stored in the Plate upon init.
 		*/
-		float * p1 = new float[MAX_WIN_WIDTH*MAX_WIN_HEIGHT];
-		kernel->debugSetUpTemperature(p1, MAX_WIN_WIDTH, MAX_WIN_HEIGHT);
+		kernel->setUpTemperature(MAX_WIN_WIDTH, MAX_WIN_HEIGHT);
+
 		/*
 		Set up the GLUT interface and callbacks.
 		*/
-		
 		screen->setupGLUT(&argc, argv);
 		glutKeyboardFunc(keyboard);
 		glutDisplayFunc(display);

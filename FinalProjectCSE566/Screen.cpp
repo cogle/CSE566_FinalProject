@@ -10,6 +10,7 @@ Screen::Screen(GLuint & pbo, GLuint & tex, PlateInfo & p_i,
 	cuda_pbo_resource = cuda_pbo_ptr;
 	temp_in = temp_arr;
 	kernel_ptr = kernel;
+	iteration_count = 0;
 }
 
 Screen::~Screen()
@@ -88,6 +89,7 @@ void Screen::keyboard(unsigned char key, int x, int y)
 /*Private Methods*/
 void Screen::render()
 {
+	iteration_count++;
 	uchar4 * out_data = 0;
 	cudaError_t cudaStatus;
 	
@@ -104,12 +106,14 @@ void Screen::render()
 	for (int i = 0; i < ITERATIONS_PER_RENDER; i++)
 	{
 		kernel_ptr->launchCalculations(out_data, MAX_WIN_WIDTH, MAX_WIN_HEIGHT);
+		std::cout << "Iteration" << std::endl;
 	}
-
+	std::cout << "PASS" << std::endl;
 	cudaStatus = cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0);
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "Call to cudaGraphicsUnmapResources failed.\n");
 	}
+	
 }
 
 void Screen::drawTexture()

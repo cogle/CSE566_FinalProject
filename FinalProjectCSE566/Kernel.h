@@ -15,7 +15,7 @@ public:
 	/*
 	Debugging method in order to ensure that the plate is being correctly set up.
 	*/
-	void debugSetUpTemperature(float * temp_out, int max_width, int max_height);
+	void debugSetUpTemperature(float temp_out[], int max_width, int max_height);
 
 	/*
 	Runtime method of the plate.
