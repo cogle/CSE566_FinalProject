@@ -23,7 +23,7 @@ Define the maximum width of the GUI window
 
 #define MAX_WIN_HEIGHT 840
 #define MAX_WIN_WIDTH  840
-#define DEFAULT_PLATE_SIZE 101
+#define DEFAULT_PLATE_SIZE 501
 
 #define ITERATIONS_PER_RENDER 18
 

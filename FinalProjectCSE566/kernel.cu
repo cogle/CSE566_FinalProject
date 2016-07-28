@@ -87,6 +87,32 @@ void calcTemp(uchar4 * out, float * temp_data ,int max_width, int max_height, Pl
 	//Alpha
 	out[idx].w = 255;
 
+
+	const int shared_col_size = blockDim.x + 2; //Width
+
+
+	const int shared_array_col = threadIdx.x + 1;
+	const int shared_array_row = threadIdx.y + 1;
+
+	const int array_index = getFlatIndex(shared_array_col, shared_array_row, shared_col_size);
+
+	shared_temp[array_index] = temp_data[idx];
+	/*
+	If first row of the thread, it is responsible for assigning the
+	first and the last row
+	*/
+	if (threadIdx.x == 0)
+	{
+		//Square to the left of the first entry.
+		shared_temp[getFlatIndex(shared_array_col - 1, shared_array_row, shared_col_size)] = temp_data[getFlatIndex(col - 1, row, max_width)];
+		shared_temp[getFlatIndex(shared_array_col + blockDim.x, shared_array_row, shared_col_size)] = temp_data[getFlatIndex(col + blockDim.x, row, max_width)];
+	}
+	if (threadIdx.y == 0)
+	{
+		shared_temp[getFlatIndex(shared_array_col, shared_array_row - 1, shared_col_size)] = temp_data[getFlatIndex(col, row - 1, max_width)];
+		shared_temp[getFlatIndex(shared_array_col, shared_array_row + blockDim.y, shared_col_size)] = temp_data[getFlatIndex(col, row + +blockDim.y, max_width)];
+	}
+
 	//Top
 	if (row == plate.plate_top_left_y && (col >= plate.plate_top_left_x && col <= plate.plate_top_right_x))
 	{
@@ -151,29 +177,8 @@ void calcTemp(uchar4 * out, float * temp_data ,int max_width, int max_height, Pl
 	//Center Value
 	else if ((col > plate.plate_top_left_x && col < plate.plate_top_right_x) && (row > plate.plate_top_right_y && row < plate.plate_bot_right_y))
 	{
-		const int shared_col_size = blockDim.x + 2; //Width
-	
 
-		const int shared_array_col = threadIdx.x + 1;
-		const int shared_array_row = threadIdx.y + 1;
-		
-		const int array_index = getFlatIndex(shared_array_col, shared_array_row, shared_col_size);
-		shared_temp[array_index] = temp_data[idx];
-		/*
-		If first row of the thread, it is responsible for assigning the
-		first and the last row
-		*/
-		if (threadIdx.x == 0)
-		{
-			//Square to the left of the first entry.
-			shared_temp[getFlatIndex(shared_array_col - 1, shared_array_row, shared_col_size)] = temp_data[getFlatIndex(col - 1, row, max_width)];
-			shared_temp[getFlatIndex(shared_array_col + blockDim.x, shared_array_row, shared_col_size)] = temp_data[getFlatIndex(col + blockDim.x, row, max_width)];
-		}
-		if (threadIdx.y == 0)
-		{
-			shared_temp[getFlatIndex(shared_array_col, shared_array_row - 1, shared_col_size)] = temp_data[getFlatIndex(col, row - 1, max_width)];
-			shared_temp[getFlatIndex(shared_array_col, shared_array_row + blockDim.y, shared_col_size)] = temp_data[getFlatIndex(col, row + +blockDim.y, max_width)];
-		}
+
 
 
 		__syncthreads();
@@ -186,7 +191,6 @@ void calcTemp(uchar4 * out, float * temp_data ,int max_width, int max_height, Pl
 	
 
 		float new_temp = .25f*(top_piece+right_piece+bot_piece+left_piece);
-		printf("Top Piece: %f\tRight Piece: %f\tBot Piece: %f\tLeft Piece: %f\tNew Temp: %f\n ", top_piece, right_piece, bot_piece, left_piece, new_temp);
 		temp_data[idx] = new_temp;
 		float intensity = calcIntensity(temp_data[idx], plate.min_temp, plate.max_temp);
 		int red = clipTemperature((int)255.0f * (intensity - 1.0f));
@@ -277,5 +281,4 @@ void KernelInterface::launchCalculations(uchar4 * out, int max_width, int max_he
 	const size_t  shared_array_size = (THREADS_X + 2)*(THREADS_Y + 2)*sizeof(float);
 
 	calcTemp <<<gridSize, blockSize, shared_array_size>>>(out, temp_in, max_width, max_height, plate);
-	cudaDeviceSynchronize();
 }
