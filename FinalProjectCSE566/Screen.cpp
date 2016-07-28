@@ -3,9 +3,9 @@
 
 Screen::Screen(GLuint & pbo, GLuint & tex, PlateInfo & p_i, 
 							 struct cudaGraphicsResource * cuda_pbo_ptr, 
-								 float * temp_arr, std::shared_ptr<KernelInterface> kernel) : pixel_buffer_object(pbo),
-																																			        texture_object(tex),
-										  																								        plate(p_i)
+							 float * temp_arr, std::shared_ptr<KernelInterface> kernel) : pixel_buffer_object(pbo),
+																																			      texture_object(tex),
+										  																								      plate(p_i)
 {
 	cuda_pbo_resource = cuda_pbo_ptr;
 	temp_in = temp_arr;
@@ -63,7 +63,11 @@ void Screen::initPixelBuffer()
 	glGenTextures(1, &texture_object);
 	glBindTexture(GL_TEXTURE_2D, texture_object);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	cudaGraphicsGLRegisterBuffer(&cuda_pbo_resource, pixel_buffer_object, cudaGraphicsMapFlagsWriteDiscard);
+
+	cudaError_t cudaStatus = cudaGraphicsGLRegisterBuffer(&cuda_pbo_resource, pixel_buffer_object, cudaGraphicsMapFlagsWriteDiscard);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "Call to cudaGraphicsGLRegisterBuffer failed.\n");
+	}
 }
 
 void Screen::display()
@@ -77,7 +81,6 @@ void Screen::display()
 void Screen::keyboard(unsigned char key, int x, int y)
 {
 	if (key == 27){ exit(0); }
-
 	glutPostRedisplay();
 }
 
@@ -86,13 +89,27 @@ void Screen::keyboard(unsigned char key, int x, int y)
 void Screen::render()
 {
 	uchar4 * out_data = 0;
-	cudaGraphicsMapResources(1, &cuda_pbo_resource, 0);
-	cudaGraphicsResourceGetMappedPointer((void **)&out_data, NULL, cuda_pbo_resource);
+	cudaError_t cudaStatus;
+	
+	cudaStatus = cudaGraphicsMapResources(1, &cuda_pbo_resource, 0);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "Call to cudaGraphicsMapResources failed.\n");
+	}
+
+	cudaStatus = cudaGraphicsResourceGetMappedPointer((void **)&out_data, NULL, cuda_pbo_resource);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "Call to cudaGraphicsResourceGetMappedPointer failed.\n");
+	}
+
 	for (int i = 0; i < ITERATIONS_PER_RENDER; i++)
 	{
 		kernel_ptr->launchCalculations(out_data, MAX_WIN_WIDTH, MAX_WIN_HEIGHT);
 	}
-	cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0);
+
+	cudaStatus = cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0);
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "Call to cudaGraphicsUnmapResources failed.\n");
+	}
 }
 
 void Screen::drawTexture()
@@ -107,3 +124,4 @@ void Screen::drawTexture()
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 }
+

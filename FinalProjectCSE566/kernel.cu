@@ -1,9 +1,24 @@
 #include "Kernel.h"
 
+__device__ 
+float calcIntensity(float cur_temp, float min_temp, float max_temp)
+{
+	if (min_temp == max_temp){ return 2.0f; }
+	return 2.0f*(cur_temp - min_temp) / (max_temp - min_temp);
+}
+
 __device__
 int getFlatIndex(int col, int row, int max_width)
 {
 	return row*max_width + col;
+}
+
+__device__
+int clipTemperature(int temp)
+{
+	if (temp < 0){ return 0; }
+	if (temp > 255){ return 255; }
+	return temp;
 }
 
 __global__
@@ -11,10 +26,8 @@ void resetTemp(float * temp_in, int max_width, int max_height, PlateInfo plate)
 {
 	const int col = blockIdx.x*blockDim.x + threadIdx.x;
 	const int row = blockIdx.y*blockDim.y + threadIdx.y;
-
 	/*Initial check to ensure that the index is inbounds*/
 	if ((col >= max_width) || (row >= max_height)){ return; }
-	
 	//Top
 	if (row == plate.plate_top_left_y && (col >= plate.plate_top_left_x && col <= plate.plate_top_right_x))
 	{
@@ -39,6 +52,7 @@ void resetTemp(float * temp_in, int max_width, int max_height, PlateInfo plate)
 		temp_in[getFlatIndex(col, row, max_width)] = plate.right_temp;
 		return;
 	}
+	//Center Value
 	else if ((col > plate.plate_top_left_x && col < plate.plate_top_right_x) && (row > plate.plate_top_right_y && row < plate.plate_bot_right_y))
 	{
 		temp_in[getFlatIndex(col, row, max_width)] = plate.average_temp;
@@ -59,6 +73,11 @@ void calcTemp(uchar4 * out, float * temp_data ,int max_width, int max_height, Pl
 	if ((col >= max_width) || (row >= max_height)){ return; }
 	const int idx = getFlatIndex(col, row, max_width);
 	
+	
+	/*
+	Set the default value to be black.
+	*/
+
 	//R
 	out[idx].x = 0;
 	//G
@@ -67,12 +86,118 @@ void calcTemp(uchar4 * out, float * temp_data ,int max_width, int max_height, Pl
 	out[idx].z = 0;
 	
 	//Alpha
-	out[idx].w = 0;
+	out[idx].w = 255;
 
+	//Top
+	if (row == plate.plate_top_left_y && (col >= plate.plate_top_left_x && col <= plate.plate_top_right_x))
+	{
+		float intensity = calcIntensity(plate.top_temp,plate.min_temp, plate.max_temp);
+
+		int red = clipTemperature((int)255.0f * (intensity - 1.0f));
+		int blue = clipTemperature((int)255.0f * (1.0f - intensity));
+		int green = clipTemperature((int) 255 - blue - red);
+
+		out[idx].x = red;
+		out[idx].y = green;
+		out[idx].z = blue;
+
+		return;
+	}
+	//Bot
+	else if (row == plate.plate_bot_left_y && (col >= plate.plate_bot_left_x && col <= plate.plate_bot_right_x))
+	{
+		float intensity = calcIntensity(plate.bot_temp, plate.min_temp, plate.max_temp);
+
+		int red = clipTemperature((int)255.0f * (intensity - 1.0f));
+		int blue = clipTemperature((int)255.0f * (1.0f - intensity));
+		int green = clipTemperature(255 - blue - red);
+
+		out[idx].x = red;
+		out[idx].y = green;
+		out[idx].z = blue;
+		return;
+	}
+	//Left
+	else if (col == plate.plate_top_left_x && (row > plate.plate_top_left_y && row < plate.plate_bot_left_y))
+	{
+
+		float intensity = calcIntensity(plate.left_temp, plate.min_temp, plate.max_temp);
+
+		int red = clipTemperature((int)255.0f * (intensity - 1.0f));
+		int blue = clipTemperature((int)255.0f * (1.0f - intensity));
+		int green = clipTemperature(255 - blue - red);
+
+		out[idx].x = red;
+		out[idx].y = green;
+		out[idx].z = blue;
+
+		return;
+	}
+	//Right
+	else if (col == plate.plate_top_right_x && (row > plate.plate_top_right_y && row < plate.plate_bot_right_y))
+	{
+		
+		float intensity = calcIntensity(plate.right_temp, plate.min_temp, plate.max_temp);
+
+		int red = clipTemperature((int)255.0f * (intensity - 1.0f));
+		int blue = clipTemperature((int)255.0f * (1.0f - intensity));
+		int green = clipTemperature(255 - blue - red);
+
+		out[idx].x = red;
+		out[idx].y = green;
+		out[idx].z = blue;
+		
+		return;
+	}
+	//Center Value
+	else if ((col > plate.plate_top_left_x && col < plate.plate_top_right_x) && (row > plate.plate_top_right_y && row < plate.plate_bot_right_y))
+	{
+		const int shared_col_size = blockDim.x + 2; //Width
+		const int shared_row_size = blockDim.y + 2;
+
+		const int shared_array_col = threadIdx.x + 1;
+		const int shared_array_row = threadIdx.y + 1;
+		
+		const int array_index = getFlatIndex(shared_array_col, shared_array_row, shared_col_size);
+
+		/*
+		If first row of the thread, it is responsible for 
+		*/
+		if (threadIdx.x < 1)
+		{
+		
+		}
+		if (threadIdx.y < 1)
+		{
+
+		}
+	}
+	else
+	{
+		return;
+	}
+
+
+	__syncthreads();
+	/*
+	float intensity = calcIntensity(temp_data[idx], plate.min_temp, plate.max_temp);
+
+	int red = clipTemperature((int)255.0f * (intensity - 1.0f));
+	int blue = clipTemperature((int)255.0f * (1.0f - intensity));
+	int green = clipTemperature(255 - blue - red);
+
+	out[idx].x = red;
+	out[idx].y = green;
+	out[idx].z = blue;	
+	*/
 }
 
-KernelInterface::KernelInterface(PlateInfo & p_i, float * temperature_array) : plate(p_i)
+KernelInterface::KernelInterface(GLuint & pbo, GLuint & tex, PlateInfo & p_i, 
+																 float * temperature_array, struct cudaGraphicsResource *cpr) : plate(p_i),
+																																																pixel_buffer_object(pbo), 
+																																																texture_object(tex)
 {
+	cuda_pbo_resource = cpr;
 	temp_in = temperature_array;
 }
 
@@ -112,11 +237,17 @@ void KernelInterface::setUpTemperature(int max_width, int max_height)
 	const dim3 blockSize(THREADS_X, THREADS_Y);
 	const dim3 gridSize(divBlocksInGrid(max_width, THREADS_X), divBlocksInGrid(max_height, THREADS_Y));
 	resetTemp <<<gridSize, blockSize>>>(temp_in, max_width, max_height, plate);
-	//cudaDeviceSynchronize();
+	cudaDeviceSynchronize();
 }
 
 void KernelInterface::releaseMem()
 {
+	if (pixel_buffer_object)
+	{
+		cudaGraphicsUnregisterResource(cuda_pbo_resource);
+		glDeleteBuffers(1, &pixel_buffer_object);
+		glDeleteBuffers(1, &texture_object);
+	}
 	cudaFree(temp_in);
 
 }
@@ -125,6 +256,9 @@ void KernelInterface::launchCalculations(uchar4 * out, int max_width, int max_he
 {
 	const dim3 blockSize(THREADS_X, THREADS_Y);
 	const dim3 gridSize(divBlocksInGrid(max_width, THREADS_X), divBlocksInGrid(max_height, THREADS_Y));
-	const size_t  shared_array_size = (plate.plate_width*plate.plate_height) - 4;
+	const size_t  shared_array_size = (THREADS_X*THREADS_Y)*sizeof(float);
+
 	calcTemp <<<gridSize, blockSize, shared_array_size>>>(out, temp_in, max_width, max_height, plate);
+	cudaDeviceSynchronize();
+	
 }

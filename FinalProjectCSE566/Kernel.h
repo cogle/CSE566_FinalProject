@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common.h"
-
+#include <device_functions.h>
 
 #define THREADS_X 32
 #define THREADS_Y 32
@@ -9,7 +9,7 @@
 class KernelInterface
 {
 public:
-	KernelInterface(PlateInfo & p_i, float * temperature_array);
+	KernelInterface(GLuint & pbo, GLuint & tex, PlateInfo & p_i, float * temperature_array, struct cudaGraphicsResource *cpr);
 	~KernelInterface();
 
 	/*
@@ -28,6 +28,9 @@ private:
 	/*Private Variables*/
 	float * temp_in;
 	PlateInfo & plate;
+	GLuint & pixel_buffer_object;
+	GLuint & texture_object;
+	struct cudaGraphicsResource *cuda_pbo_resource;
 
 	/*Private Functions*/
 	int  divBlocksInGrid(int screenSize, int numThreads);

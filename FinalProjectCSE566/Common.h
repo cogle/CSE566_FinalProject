@@ -23,14 +23,15 @@ Define the maximum width of the GUI window
 
 #define MAX_WIN_HEIGHT 840
 #define MAX_WIN_WIDTH  840
-#define DEFAULT_PLATE_SIZE 503
-#define ITERATIONS_PER_RENDER 18
-/*
-Debugging variables
+#define DEFAULT_PLATE_SIZE 603
 
-#define MAX_WIN_HEIGHT 10
-#define MAX_WIN_WIDTH  10
-#define DEFAULT_PLATE_SIZE 5
+#define ITERATIONS_PER_RENDER 18
+
+//Debugging variables
+/*
+#define MAX_WIN_HEIGHT 840
+#define MAX_WIN_WIDTH  840
+#define DEFAULT_PLATE_SIZE 223
 */
 
 
@@ -65,17 +66,11 @@ struct PlateInfo
 		/*
 		Find the center of our GUI, sub by one for array index
 		*/
-		int gui_center_x = (max_width / 2);
-		int gui_center_y = (max_height / 2);
+		int gui_center_x = (max_width / 2) - 1;
+		int gui_center_y = (max_height / 2) -1;
 
-		/*
-		Find the offset for each corner. Sub one for the center.
-		*/
-		int diff_x = gui_center_x - (plate_width / 2) - 1;
-		int diff_y = gui_center_y - (plate_height / 2) - 1;
-
-		int gui_array_center_x = gui_center_x - 1;
-		int gui_array_center_y = gui_center_y - 1;
+		int half_width = plate_width / 2;
+		int half_height = plate_height / 2;
 
 		/*
 		Assign the plate bounderies
@@ -84,33 +79,36 @@ struct PlateInfo
 		/*
 		Top Left                               Top Right
 		*---------------------------------------*
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
-		|																				|
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
+		|                                       |
 		*---------------------------------------*
 		Bot Left																Bot Right
 		*/
-		plate_top_left_x = gui_array_center_x - diff_x;
-		plate_top_left_y = gui_array_center_y - diff_y;
 
-		plate_top_right_x = gui_array_center_x + diff_x;
-		plate_top_right_y = gui_array_center_y - diff_y;
 
-		plate_bot_left_x = gui_array_center_x - diff_x;
-		plate_bot_left_y = gui_array_center_y + diff_y;
 
-		plate_bot_right_x = gui_array_center_x + diff_x;
-		plate_bot_right_y = gui_array_center_y + diff_y;
+		plate_top_left_x = gui_center_x - half_width;
+		plate_top_left_y = gui_center_y - half_height;
+
+		plate_top_right_x = gui_center_x + half_width;
+		plate_top_right_y = gui_center_y - half_height;
+
+		plate_bot_left_x = gui_center_x - half_width;
+		plate_bot_left_y = gui_center_y + half_height;
+
+		plate_bot_right_x = gui_center_x + half_width;
+		plate_bot_right_y = gui_center_y + half_height;
 	}
 
 	void setMax(float top_temp, float left_temp, float bot_temp, float right_temp)
@@ -133,15 +131,15 @@ struct PlateInfo
 	void setMin(float top_temp, float left_temp, float bot_temp, float right_temp)
 	{
 		min_temp = top_temp;
-		if (left_temp > min_temp)
+		if (left_temp < min_temp)
 		{
 			min_temp = left_temp;
 		}
-		if (bot_temp > min_temp)
+		if (bot_temp < min_temp)
 		{
 			min_temp = bot_temp;
 		}
-		if (right_temp > min_temp)
+		if (right_temp < min_temp)
 		{
 			min_temp = right_temp;
 		}
