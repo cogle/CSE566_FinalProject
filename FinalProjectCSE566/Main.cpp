@@ -27,6 +27,7 @@ int main(int argc, char** argv)
 
 	if (argc == Args::VISUAL)
 	{
+
 		float * temp_array = nullptr;
 		struct cudaGraphicsResource *cpr = nullptr;
 		cudaError_t rc = cudaMalloc((void **)&temp_array, MAX_WIN_HEIGHT*MAX_WIN_WIDTH*sizeof(float));

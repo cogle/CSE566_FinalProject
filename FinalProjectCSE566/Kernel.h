@@ -9,6 +9,10 @@
 class KernelInterface
 {
 public:
+
+	/*
+	Constructor for the Kernel.
+	*/
 	KernelInterface(GLuint & pbo, GLuint & tex, PlateInfo & p_i, float * temperature_array, struct cudaGraphicsResource *cpr);
 	~KernelInterface();
 
@@ -25,6 +29,7 @@ public:
 	void launchCalculations(uchar4 * out, int width, int height);
 
 private: 
+
 	/*Private Variables*/
 	float * temp_in;
 	PlateInfo & plate;

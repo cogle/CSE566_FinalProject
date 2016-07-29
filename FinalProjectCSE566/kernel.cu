@@ -262,6 +262,9 @@ void KernelInterface::setUpTemperature(int max_width, int max_height)
 	resetTemp <<<gridSize, blockSize>>>(temp_in, max_width, max_height, plate);
 }
 
+/*
+Release all the memory.
+*/
 void KernelInterface::releaseMem()
 {
 	if (pixel_buffer_object)
@@ -274,6 +277,9 @@ void KernelInterface::releaseMem()
 
 }
 
+/*
+Launches the calculations for the Heat Plane
+*/
 void KernelInterface::launchCalculations(uchar4 * out, int max_width, int max_height)
 {
 	const dim3 blockSize(THREADS_X, THREADS_Y);
