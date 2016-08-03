@@ -35,8 +35,8 @@ Define the maximum width of the GUI window
 */
 
 
-enum Args    {VISUAL = 1, NO_VISUAL = 6};
-enum Returns {SUCCESS, INCORRECT_ARGS, CUDA_MEMORY_ERROR};
+enum Args    {VISUAL = 1, CUSTOM_VISUAL = 6};
+enum Returns {SUCCESS, INCORRECT_ARGS, CUDA_MEMORY_ERROR, ARG_PARSE_ERROR, PLATE_TO_LARGE};
 
 extern char title[256];
 extern int plate_width, plate_height;
@@ -55,12 +55,18 @@ struct PlateInfo
 		setMax(top_temp, left_temp, bot_temp, right_temp);
 		setMin(top_temp, left_temp, bot_temp, right_temp);
 	}
-	/*
-	PlateInfo(float t_t, float l_t, float b_t, float r_t) : top_temp(t_t), left_temp(l_t), bot_temp(b_t), right_temp(r_t)
+	PlateInfo(float t_t, float r_t, float b_t, float l_t, int plate_size, int max_width, int max_height) : top_temp(t_t),
+		                                                                                                     left_temp(l_t), 
+																													                                               bot_temp(b_t), 
+																													                                               right_temp(r_t),
+																																					                               plate_height(plate_size),
+																																					                               plate_width(plate_size)
 	{
-
+		initPlateBoundariesGUI(plate_width, plate_height, max_width, max_height);
+		average_temp = (top_temp*plate_width + bot_temp*plate_width + left_temp*(plate_height - 2.0f) + right_temp*(plate_height - 2)) / (2.0f*plate_width + 2.0f*(plate_height - 2));
+		setMax(top_temp, left_temp, bot_temp, right_temp);
+		setMin(top_temp, left_temp, bot_temp, right_temp);
 	}
-	*/
 	void initPlateBoundariesGUI(int plate_width, int plate_height, int max_width, int max_height)
 	{
 		/*
@@ -161,7 +167,8 @@ inline void usageHelp()
 {
 	printf("Program usage\n");
 	printf("In order to run the program without the visual interface(large plates) enter the following\n");
-	printf("ExecutableName <Plate Size> <Top Temp> <Right Temp> <Bot Temp> <Left Temp>\n");
+	printf("ExecutableName <Top Temp> <Right Temp> <Bot Temp> <Left Temp> <Plate Size>\n");
+	printf("MAX PLATE SIZE IS 830\n");
 }
 
 

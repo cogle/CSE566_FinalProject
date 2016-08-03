@@ -22,7 +22,7 @@ void Screen::setupGLUT(int * argc, char ** argv)
 {
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-	//720 x 720
+	//840 x 840
 	glutInitWindowSize(MAX_WIN_WIDTH, MAX_WIN_WIDTH);
 	glutCreateWindow(title);
 	glewInit();
@@ -107,6 +107,8 @@ void Screen::render()
 	{
 		kernel_ptr->launchCalculations(out_data, MAX_WIN_WIDTH, MAX_WIN_HEIGHT);
 	}
+
+	std::cout << "Iteration number: " << iteration_count*ITERATIONS_PER_RENDER << std::endl;
 	cudaStatus = cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0);
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "Call to cudaGraphicsUnmapResources failed.\n");
